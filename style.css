@@ -338,3 +338,9 @@ footer p { margin: 0 0 4px; }
 .al-tags .hit { background: var(--warn); color: var(--bg); }
 .ficha .muted { color: var(--muted); }
 .ficha-add { width: 100%; justify-content: center; margin-top: 26px; }
+
+/* ---- transiciones de la barra de categorías ---- */
+.chip, .seg button { transition: background-color 0.22s ease, color 0.22s ease; }
+.chips.swap { animation: chipsIn 0.28s ease-out; }
+@keyframes chipsIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .chip, .seg button { transition: none; } .chips.swap { animation: none; } }

@@ -158,12 +158,33 @@ function renderMenu() {
 
 function renderBar() {
   const hasGroup = (g) => MENU.some((c) => c.group === g && visible.has(c.id));
-  $("seg").innerHTML = Object.keys(GROUPS).map((g) =>
-    '<button type="button" data-g="' + g + '" aria-pressed="' + (g === curGroup) + '"' + (hasGroup(g) ? "" : " disabled") + ">" + GROUPS[g][lang] + "</button>").join("");
-  $("chips").innerHTML = MENU.filter((c) => c.group === curGroup && visible.has(c.id)).map((c) =>
-    '<button type="button" class="chip" data-c="' + c.id + '" aria-current="' + (c.id === curSec) + '">' + c[lang] + "</button>").join("");
-  const active = document.querySelector('.chip[aria-current="true"]');
-  if (active) $("chips").scrollTo({ left: active.offsetLeft - 16, behavior: "auto" });
+  const seg = $("seg"), chips = $("chips");
+  // Píldora Comida/Bebidas: se reconstruye solo si cambia el idioma o lo visible; si no, solo se cambia la marcada (con transición).
+  const segSig = lang + "|" + Object.keys(GROUPS).map((g) => hasGroup(g)).join();
+  if (seg.dataset.sig !== segSig) {
+    seg.innerHTML = Object.keys(GROUPS).map((g) =>
+      '<button type="button" data-g="' + g + '" aria-pressed="' + (g === curGroup) + '"' + (hasGroup(g) ? "" : " disabled") + ">" + GROUPS[g][lang] + "</button>").join("");
+    seg.dataset.sig = segSig;
+  } else {
+    seg.querySelectorAll("[data-g]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.g === curGroup)));
+  }
+  // Categorías: si es el mismo grupo, se mantienen y la marcada cambia con transición; la barra se desplaza suavemente hasta la nueva.
+  const list = MENU.filter((c) => c.group === curGroup && visible.has(c.id));
+  const sig = lang + "|" + curGroup + "|" + list.map((c) => c.id).join();
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const rebuilt = chips.dataset.sig !== sig;
+  if (rebuilt) {
+    chips.innerHTML = list.map((c) => '<button type="button" class="chip" data-c="' + c.id + '" aria-current="' + (c.id === curSec) + '">' + c[lang] + "</button>").join("");
+    chips.dataset.sig = sig;
+    chips.classList.remove("swap"); void chips.offsetWidth; if (!reduce) chips.classList.add("swap");
+  } else {
+    chips.querySelectorAll(".chip").forEach((b) => b.setAttribute("aria-current", String(b.dataset.c === curSec)));
+  }
+  const active = chips.querySelector('.chip[aria-current="true"]');
+  if (active) {
+    const left = Math.max(0, active.offsetLeft - (chips.clientWidth - active.offsetWidth) / 2);
+    chips.scrollTo({ left, behavior: rebuilt || reduce ? "auto" : "smooth" });
+  }
 }
 
 function trayTotals() {
