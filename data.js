@@ -12,9 +12,10 @@ const UI = {
     addFav: "Añadir a mi selección", rmFav: "Quitar de mi selección",
     addr: "Passeig Marítim 51, 07579 Colònia de Sant Pere", phone: "Teléfono 971 76 96 05",
     extras: "Extras para la burger", soonLang: "Próximamente",
-    demo: "<b>Alérgenos de ejemplo.</b> Los alérgenos de cada plato son orientativos y se definirán con el restaurante antes de publicar.",
+    demo: "<b>Alérgenos de ejemplo</b>, orientativos hasta confirmarlos con el restaurante.",
+    theme: "Tema", themeDark: "Oscuro", themeLight: "Claro", done: "Listo", langLabel: "Idioma", searchOpen: "Buscar", back: "Volver",
     legend: "Leyenda de alérgenos", noAl: "Alérgenos", cartaTitle: "Carta", seeMenu: "Ver la carta", home: "Inicio",
-    contains: "Contiene", alShow: "Mostrar alérgenos", filters: "Filtros", dietTitle: "Mi dieta", avoidTitle: "Evitar alérgenos",
+    contains: "Contiene", alShow: "Mostrar alérgenos en los platos", filters: "Filtros", dietTitle: "Mi dieta", avoidTitle: "Evitar alérgenos",
     filterNote: "Los platos que no encajan se atenúan. Es orientativo: confirma siempre con el personal.",
     active: "Filtros activos", clearAll: "Quitar filtros", avoidingWord: "evitando",
     searchPh: "Buscar plato o bebida", results: "resultados", result1: "resultado", none: "Sin resultados para", trayShow: "Ver detalle", trayHide: "Ocultar detalle",
@@ -34,9 +35,10 @@ const UI = {
     addFav: "Add to my selection", rmFav: "Remove from my selection",
     addr: "Passeig Marítim 51, 07579 Colònia de Sant Pere", phone: "Phone +34 971 76 96 05",
     extras: "Burger extras", soonLang: "Coming soon",
-    demo: "<b>Sample allergens.</b> The allergens listed on each dish are indicative and will be confirmed with the restaurant before going live.",
+    demo: "<b>Sample allergens</b>, indicative until confirmed with the restaurant.",
+    theme: "Theme", themeDark: "Dark", themeLight: "Light", done: "Done", langLabel: "Language", searchOpen: "Search", back: "Back",
     legend: "Allergen key", noAl: "Allergens", cartaTitle: "Menu", seeMenu: "See the menu", home: "Home",
-    contains: "Contains", alShow: "Show allergens", filters: "Filters", dietTitle: "My diet", avoidTitle: "Avoid allergens",
+    contains: "Contains", alShow: "Show allergens on dishes", filters: "Filters", dietTitle: "My diet", avoidTitle: "Avoid allergens",
     filterNote: "Dishes that do not fit are dimmed. This is a guide only: always confirm with the staff.",
     active: "Active filters", clearAll: "Clear filters", avoidingWord: "avoiding",
     searchPh: "Search dishes or drinks", results: "results", result1: "result", none: "No results for", trayShow: "Show details", trayHide: "Hide details",
@@ -246,12 +248,15 @@ function loadLang() {
 }
 function saveLang(l) { try { localStorage.setItem(LANG_KEY, l); } catch (e) {} }
 function moneyFmt(n, lang) { return new Intl.NumberFormat(lang === "es" ? "es-ES" : "en-GB", { style: "currency", currency: "EUR" }).format(n); }
-function langButtons(lang, t) {
+const LANG_NAMES = { es: "Español", en: "English", ca: "Català", de: "Deutsch", fr: "Français" };
+function langButtons(lang, t, full) {
   return ["es", "en", "ca", "de", "fr"].map((l) => {
     const on = l === lang, avail = l === "es" || l === "en";
-    return '<button type="button" data-l="' + l + '" aria-pressed="' + on + '"' + (avail ? "" : ' disabled title="' + t.soonLang + '"') + ">" + l.toUpperCase() + "</button>";
+    return '<button type="button" data-l="' + l + '" aria-pressed="' + on + '"' + (avail ? "" : ' disabled title="' + t.soonLang + '"') + ">" + (full ? LANG_NAMES[l] : l.toUpperCase()) + "</button>";
   }).join("");
 }
+function loadTheme() { return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"; }
+function saveTheme(th) { if (th === "light") document.documentElement.setAttribute("data-theme", "light"); else document.documentElement.removeAttribute("data-theme"); try { localStorage.setItem("sb-theme", th); } catch (e) {} }
 function loadAl() { try { return localStorage.getItem("sb-al") !== "off"; } catch (e) { return true; } }
 function saveAl(on) { try { localStorage.setItem("sb-al", on ? "on" : "off"); } catch (e) {} }
 function waLink(t) { return "https://wa.me/34971769605?text=" + encodeURIComponent(t.waText); }

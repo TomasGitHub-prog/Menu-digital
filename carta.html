@@ -7,26 +7,30 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<script>try{if(localStorage.getItem("sb-theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap slim">
   <a href="index.html" id="homeLink"><svg viewBox="0 0 34 34" aria-hidden="true"><defs><clipPath id="lg"><rect width="34" height="34" rx="9"/></clipPath></defs><g clip-path="url(#lg)"><rect width="34" height="34" fill="var(--sky-b)"/><circle cx="17" cy="21" r="9" fill="var(--sun)"/><rect y="21" width="34" height="13" fill="var(--sea-a)"/><rect x="9" y="24" width="16" height="2" rx="1" fill="var(--glint)"/><rect x="13" y="28" width="8" height="2" rx="1" fill="var(--glint)"/></g></svg><span>Sunsets Beach</span></a>
-  <span class="where" id="whereLabel"></span>
+  <div class="head-tools">
+    <button type="button" class="icon-btn" id="searchBtn" aria-expanded="false" aria-controls="searchRow"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+    <details class="langmenu" id="langMenu"><summary id="langCur"></summary><div class="lang" id="lang"></div></details>
+  </div>
 </div>
+<div class="wrap search" id="searchRow" hidden><input type="search" id="q" autocomplete="off" aria-label="Buscar"><p class="search-info" id="qInfo" aria-live="polite"></p></div>
 
 <div class="bar">
   <div class="wrap bar-inner">
     <div class="bar-top">
       <div class="seg" id="seg"></div>
-      <div class="lang" id="lang" aria-label="Idioma"></div>
+      <button type="button" class="btn small" id="filtersBtn" aria-expanded="false" aria-controls="sheet"></button>
     </div>
     <nav class="chips" id="chips" aria-label="Categorías"></nav>
   </div>
 </div>
 
 <main>
-  <div class="wrap search"><input type="search" id="q" autocomplete="off" aria-label="Buscar"><p class="search-info" id="qInfo" aria-live="polite"></p></div>
   <div class="wrap" id="alControls"></div>
   <div class="wrap stars-wrap" id="starsWrap"></div>
   <div class="wrap" id="menu"></div>
@@ -54,6 +58,8 @@
     </div>
   </div>
 </div>
+
+<div id="sheetWrap"></div>
 
 <div class="waiter" id="waiter" role="dialog" aria-modal="true" hidden>
   <div class="waiter-inner" id="waiterBody"></div>

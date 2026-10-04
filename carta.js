@@ -4,7 +4,7 @@ const picked = new Map();                 // clave "cat:plato" -> cantidad
 const _f = loadFilters();
 const avoid = new Set(_f.avoid);
 const diet = new Set(_f.diet);
-let showAl = loadAl(), panelOpen = false, query = "";
+let showAl = loadAl(), panelOpen = false, searchOpen = false, query = "";
 let visible = new Set();                  // ids de categorías con resultados
 
 const $ = (id) => document.getElementById(id);
@@ -31,7 +31,6 @@ function renderStatic() {
   document.documentElement.lang = lang;
   document.title = "Sunsets Beach · " + t.cartaTitle;
   $("homeLink").setAttribute("aria-label", t.home);
-  $("whereLabel").textContent = t.cartaTitle;
   $("addr").textContent = t.addr;
   $("phone").textContent = t.phone;
   $("reserve").textContent = t.reserve;
@@ -41,33 +40,57 @@ function renderStatic() {
   $("trayNote").textContent = t.note;
   $("trayClear").textContent = t.clear;
   $("waiterBtn").textContent = t.waiterBtn;
-  $("lang").innerHTML = langButtons(lang, t);
+  $("lang").innerHTML = langButtons(lang, t, true);
+  $("langCur").textContent = lang.toUpperCase();
+  $("langCur").setAttribute("aria-label", t.langLabel + ": " + LANG_NAMES[lang]);
+  $("searchBtn").setAttribute("aria-label", t.searchOpen);
   renderControls();
   renderMenu();
 }
 
 function renderControls() {
-  const t = UI[lang];
-  let h = '<div class="demo-note">' + t.demo + "</div>";
-  h += '<div class="al-ctrl"><button type="button" class="switch" id="alToggle" role="switch" aria-checked="' + showAl + '"><span class="track"></span><span>' + t.alShow + "</span></button>";
-  h += '<button type="button" class="btn small" id="filtersBtn" aria-expanded="' + panelOpen + '" aria-controls="filtersPanel">' + t.filters + (filtersCount() ? " (" + filtersCount() + ")" : "") + "</button></div>";
-  if (panelOpen) {
-    h += '<div class="avoid-panel" id="filtersPanel"><div class="filter-sec"><h3>' + t.dietTitle + '</h3><div class="opts">' +
-      ["v", "vg", "gf", "lf"].map((k) => '<button type="button" class="opt" data-d="' + k + '" aria-pressed="' + diet.has(k) + '">' + t.diets[k] + "</button>").join("") + "</div></div>";
-    if (showAl) {
-      h += '<div class="filter-sec"><h3>' + t.avoidTitle + '</h3><div class="opts">' +
-        ALLERGENS.map((a, i) => '<button type="button" class="opt" data-a="' + (i + 1) + '" aria-pressed="' + avoid.has(i + 1) + '">' + a[lang === "es" ? 0 : 1] + "</button>").join("") + "</div></div>";
-    }
-    h += '<p class="tray-note">' + t.filterNote + "</p></div>";
-  }
-  if (filtersCount()) {
+  const t = UI[lang], n = filtersCount();
+  const fb = $("filtersBtn");
+  fb.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>' + t.filters + (n ? '<span class="badge">' + n + "</span>" : "");
+  fb.setAttribute("aria-expanded", String(panelOpen));
+  let h = "";
+  if (n) {
     const parts = [...diet].map((k) => t.diets[k]);
     if (showAl && avoid.size) parts.push(t.avoidingWord + " " + [...avoid].sort((a, b) => a - b).map((k) => alName(k)).join(", ").toLowerCase());
     h += '<p class="avoid-status"><b>' + t.active + ":</b> " + parts.join(" · ") +
       ' · <button type="button" class="link-btn" id="filtersClear">' + t.clearAll + "</button></p>";
   }
   $("alControls").innerHTML = h;
+  renderSheet();
 }
+
+function renderSheet() {
+  const t = UI[lang], host = $("sheetWrap");
+  if (!panelOpen) { host.innerHTML = ""; return; }
+  const old = host.querySelector(".sheet"), top = old ? old.scrollTop : 0;
+  const ae = document.activeElement, sel = ae && host.contains(ae) ? (ae.id ? "#" + ae.id : ae.dataset.d ? '[data-d="' + ae.dataset.d + '"]' : ae.dataset.a ? '[data-a="' + ae.dataset.a + '"]' : ae.dataset.theme ? '[data-theme-set="' + ae.dataset.theme + '"]' : "") : "";
+  const th = loadTheme();
+  let h = '<div class="sheet-back" id="sheetBack"></div><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"><div class="sheet-inner">' +
+    '<div class="sheet-top"><h2 id="sheetTitle">' + t.filters + '</h2><button type="button" class="btn small" id="sheetClose">' + t.done + "</button></div>" +
+    '<div class="filter-sec"><button type="button" class="switch" id="alToggle" role="switch" aria-checked="' + showAl + '"><span class="track"></span><span>' + t.alShow + "</span></button></div>" +
+    '<div class="filter-sec"><h3>' + t.dietTitle + '</h3><div class="opts">' +
+    ["v", "vg", "gf", "lf"].map((k) => '<button type="button" class="opt" data-d="' + k + '" aria-pressed="' + diet.has(k) + '">' + t.diets[k] + "</button>").join("") + "</div></div>";
+  if (showAl) {
+    h += '<div class="filter-sec"><h3>' + t.avoidTitle + '</h3><div class="opts">' +
+      ALLERGENS.map((a, i) => '<button type="button" class="opt" data-a="' + (i + 1) + '" aria-pressed="' + avoid.has(i + 1) + '">' + a[lang === "es" ? 0 : 1] + "</button>").join("") + "</div></div>";
+  }
+  h += '<p class="tray-note">' + t.filterNote + "</p>";
+  if (filtersCount()) h += '<p style="margin:12px 0 0"><button type="button" class="link-btn" id="sheetClear">' + t.clearAll + "</button></p>";
+  h += '<div class="filter-sec"><h3>' + t.theme + '</h3><div class="opts">' +
+    '<button type="button" class="opt" data-theme-set="dark" aria-pressed="' + (th === "dark") + '">' + t.themeDark + "</button>" +
+    '<button type="button" class="opt" data-theme-set="light" aria-pressed="' + (th === "light") + '">' + t.themeLight + "</button></div></div></div></div>";
+  host.innerHTML = h;
+  const sh = host.querySelector(".sheet");
+  sh.scrollTop = top;
+  const target = sel && host.querySelector(sel);
+  (target || $("sheetClose")).focus({ preventScroll: true });
+}
+function closeSheet() { panelOpen = false; renderControls(); $("filtersBtn").focus(); }
 
 function renderStars() {
   const t = UI[lang], [n, d] = ai();
@@ -78,7 +101,7 @@ function renderStars() {
       if (ii >= 0) {
         const it = MENU[ci].items[ii];
         return '<button type="button" class="star' + (dishFits(it) ? "" : " nofit") + '" data-go="' + key(ci, ii) + '"><h3>' + it[n] + "</h3><p>" + it[d] +
-          '</p><span class="sp">' + money(it[4]) + (it[5] ? " · " + t.pp : "") + "</span></button>";
+          '</p><span class="sp">' + money(it[4]) + (it[5] ? " <small>" + t.pp + "</small>" : "") + "</span></button>";
       }
     }
     return "";
@@ -219,12 +242,24 @@ document.addEventListener("click", (ev) => {
   if (ev.target.closest("#waiterClose")) { closeWaiter(); return; }
   if (ev.target.closest("#waiterBtn")) { openWaiter(); return; }
   if (ev.target.closest("#alToggle")) { showAl = !showAl; saveAl(showAl); refresh(); return; }
-  if (ev.target.closest("#filtersBtn")) { panelOpen = !panelOpen; renderControls(); return; }
+  if (ev.target.closest("#filtersBtn")) { panelOpen = true; renderControls(); return; }
+  if (ev.target.closest("#sheetClose") || ev.target.closest("#sheetBack")) { closeSheet(); return; }
+  const ths = ev.target.closest("[data-theme-set]");
+  if (ths) { saveTheme(ths.dataset.themeSet); renderSheet(); return; }
+  if (ev.target.closest("#searchBtn")) {
+    searchOpen = !searchOpen;
+    $("searchRow").hidden = !searchOpen;
+    $("searchBtn").setAttribute("aria-expanded", String(searchOpen));
+    if (searchOpen) $("q").focus();
+    else if (query) { query = ""; curSec = ""; $("q").value = ""; renderMenu(); }
+    return;
+  }
+  if (!ev.target.closest("#langMenu")) $("langMenu").open = false;
   const dopt = ev.target.closest("[data-d]");
   if (dopt) { const k = dopt.dataset.d; if (diet.has(k)) diet.delete(k); else diet.add(k); refresh(); return; }
   const opt = ev.target.closest(".opt[data-a]");
   if (opt) { const a = Number(opt.dataset.a); if (avoid.has(a)) avoid.delete(a); else avoid.add(a); refresh(); return; }
-  if (ev.target.closest("#filtersClear")) { avoid.clear(); diet.clear(); refresh(); return; }
+  if (ev.target.closest("#filtersClear, #sheetClear")) { avoid.clear(); diet.clear(); refresh(); return; }
   const go = ev.target.closest("[data-go]");
   if (go) {
     const el = document.getElementById("d-" + go.dataset.go.replace(":", "-"));
@@ -239,7 +274,7 @@ document.addEventListener("click", (ev) => {
   const seg = ev.target.closest("[data-g]");
   if (seg && !seg.disabled) { document.getElementById(seg.dataset.g)?.scrollIntoView(); return; }
   const l = ev.target.closest("[data-l]");
-  if (l && !l.disabled) { lang = l.dataset.l; saveLang(lang); renderStatic(); return; }
+  if (l && !l.disabled) { lang = l.dataset.l; saveLang(lang); $("langMenu").open = false; renderStatic(); return; }
   const step = ev.target.closest("[data-step]");
   if (step) {
     const k = step.dataset.k, q = (picked.get(k) || 0) + Number(step.dataset.step);
@@ -266,7 +301,12 @@ document.addEventListener("click", (ev) => {
   if (ev.target.closest("#trayClear")) { picked.clear(); closeWaiter(); renderMenu(); }
 });
 
-$("q").addEventListener("input", (ev) => { query = ev.target.value.trim(); renderMenu(); });
-document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !$("waiter").hidden) closeWaiter(); });
+$("q").addEventListener("input", (ev) => { const was = query; query = ev.target.value.trim(); if (was && !query) curSec = ""; renderMenu(); });
+document.addEventListener("keydown", (ev) => {
+  if (ev.key !== "Escape") return;
+  if (!$("waiter").hidden) closeWaiter();
+  else if (panelOpen) closeSheet();
+  else if ($("langMenu").open) $("langMenu").open = false;
+});
 
 renderStatic();

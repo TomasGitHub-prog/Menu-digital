@@ -28,3 +28,6 @@ Nombres y precios: carta publicada en mallorca-touristguide.co.uk (versión en e
 - **Fotos:** la portada tiene tres huecos "Foto del local". Las aporta el dueño.
 - Catalán, alemán y francés: desactivados en el selector.
 - Revisar con el dueño nombres de bebidas y marcas (se corrigieron erratas evidentes de la fuente).
+
+## Tema
+Oscuro por defecto (más acorde con el local de playa y atardecer). El claro se elige en Filtros → Tema y se recuerda (`sb-theme`).
