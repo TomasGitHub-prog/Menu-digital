@@ -1,0 +1,272 @@
+let lang = loadLang();
+let curGroup = "comida", curSec = "tapas";
+const picked = new Map();                 // clave "cat:plato" -> cantidad
+const _f = loadFilters();
+const avoid = new Set(_f.avoid);
+const diet = new Set(_f.diet);
+let showAl = loadAl(), panelOpen = false, query = "";
+let visible = new Set();                  // ids de categorías con resultados
+
+const $ = (id) => document.getElementById(id);
+const money = (n) => moneyFmt(n, lang);
+const heart = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.35-9.33-8.85C1.2 9.2 2.8 5.5 6.3 5.5c2 0 3.7 1.1 5.7 3.2 2-2.1 3.7-3.2 5.7-3.2 3.5 0 5.1 3.7 3.63 6.65C19 16.65 12 21 12 21z" stroke-linejoin="round"/></svg>';
+const key = (ci, ii) => ci + ":" + ii;
+const byKey = (k) => { const [ci, ii] = k.split(":").map(Number); return MENU[ci].items[ii]; };
+const ai = () => (lang === "es" ? [0, 1] : [2, 3]);
+const detail = (text, t) => text.replace("@glass", t.glass).replace("@bottle", t.bottle);
+const alName = (k, l) => ALLERGENS[k - 1][(l || lang) === "es" ? 0 : 1];
+const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+const matches = (it, c) => {
+  if (!query) return true;
+  const hay = norm(it[0] + " " + it[1] + " " + it[2] + " " + it[3] + " " + c.es + " " + c.en);
+  return norm(query).split(/\s+/).filter(Boolean).every((w) => hay.includes(w));
+};
+const fits = (it, k) => k === "gf" ? !it[6].includes(1) : k === "lf" ? !it[6].includes(7) : it[7] === null || it[7].includes(k) || (k === "v" && it[7].includes("vg"));
+const dishFits = (it) => [...diet].every((k) => fits(it, k)) && !(showAl && it[6].some((a) => avoid.has(a)));
+const filtersCount = () => diet.size + (showAl ? avoid.size : 0);
+
+function renderStatic() {
+  const t = UI[lang];
+  document.documentElement.lang = lang;
+  document.title = "Sunsets Beach · " + t.cartaTitle;
+  $("homeLink").setAttribute("aria-label", t.home);
+  $("whereLabel").textContent = t.cartaTitle;
+  $("addr").textContent = t.addr;
+  $("phone").textContent = t.phone;
+  $("reserve").textContent = t.reserve;
+  $("reserve").href = waLink(t);
+  $("q").placeholder = t.searchPh;
+  $("q").setAttribute("aria-label", t.searchPh);
+  $("trayNote").textContent = t.note;
+  $("trayClear").textContent = t.clear;
+  $("waiterBtn").textContent = t.waiterBtn;
+  $("lang").innerHTML = langButtons(lang, t);
+  renderControls();
+  renderMenu();
+}
+
+function renderControls() {
+  const t = UI[lang];
+  let h = '<div class="demo-note">' + t.demo + "</div>";
+  h += '<div class="al-ctrl"><button type="button" class="switch" id="alToggle" role="switch" aria-checked="' + showAl + '"><span class="track"></span><span>' + t.alShow + "</span></button>";
+  h += '<button type="button" class="btn small" id="filtersBtn" aria-expanded="' + panelOpen + '" aria-controls="filtersPanel">' + t.filters + (filtersCount() ? " (" + filtersCount() + ")" : "") + "</button></div>";
+  if (panelOpen) {
+    h += '<div class="avoid-panel" id="filtersPanel"><div class="filter-sec"><h3>' + t.dietTitle + '</h3><div class="opts">' +
+      ["v", "vg", "gf", "lf"].map((k) => '<button type="button" class="opt" data-d="' + k + '" aria-pressed="' + diet.has(k) + '">' + t.diets[k] + "</button>").join("") + "</div></div>";
+    if (showAl) {
+      h += '<div class="filter-sec"><h3>' + t.avoidTitle + '</h3><div class="opts">' +
+        ALLERGENS.map((a, i) => '<button type="button" class="opt" data-a="' + (i + 1) + '" aria-pressed="' + avoid.has(i + 1) + '">' + a[lang === "es" ? 0 : 1] + "</button>").join("") + "</div></div>";
+    }
+    h += '<p class="tray-note">' + t.filterNote + "</p></div>";
+  }
+  if (filtersCount()) {
+    const parts = [...diet].map((k) => t.diets[k]);
+    if (showAl && avoid.size) parts.push(t.avoidingWord + " " + [...avoid].sort((a, b) => a - b).map((k) => alName(k)).join(", ").toLowerCase());
+    h += '<p class="avoid-status"><b>' + t.active + ":</b> " + parts.join(" · ") +
+      ' · <button type="button" class="link-btn" id="filtersClear">' + t.clearAll + "</button></p>";
+  }
+  $("alControls").innerHTML = h;
+}
+
+function renderStars() {
+  const t = UI[lang], [n, d] = ai();
+  if (query) { $("starsWrap").innerHTML = ""; return; }
+  const cards = STARS.map((name) => {
+    for (let ci = 0; ci < MENU.length; ci++) {
+      const ii = MENU[ci].items.findIndex((it) => it[0] === name);
+      if (ii >= 0) {
+        const it = MENU[ci].items[ii];
+        return '<button type="button" class="star' + (dishFits(it) ? "" : " nofit") + '" data-go="' + key(ci, ii) + '"><h3>' + it[n] + "</h3><p>" + it[d] +
+          '</p><span class="sp">' + money(it[4]) + (it[5] ? " · " + t.pp : "") + "</span></button>";
+      }
+    }
+    return "";
+  }).join("");
+  $("starsWrap").innerHTML = cards ? "<h2>" + t.starsTitle + '</h2><div class="stars">' + cards + "</div>" : "";
+}
+
+function renderMenu() {
+  const t = UI[lang];
+  const [n, d] = ai();
+  let html = "", total = 0, lastGroup = "";
+  visible = new Set();
+  MENU.forEach((c, ci) => {
+    const rows = c.items.map((it, ii) => ({ it, ii })).filter((r) => matches(r.it, c));
+    if (!rows.length) return;
+    visible.add(c.id);
+    total += rows.length;
+    if (c.group !== lastGroup) {
+      html += '<h2 class="group-title" id="' + c.group + '">' + GROUPS[c.group][lang] + "</h2>";
+      lastGroup = c.group;
+    }
+    const items = rows.map(({ it, ii }) => {
+      const on = picked.has(key(ci, ii));
+      const price = money(it[4]) + (it[5] ? "<small>" + t.pp + "</small>" : "");
+      const det = it[d] ? "<p>" + detail(it[d], t) + "</p>" : "";
+      const tags = it[7] && it[7].length ? '<div class="tags"><span class="tag">' + (it[7].includes("vg") ? t.diets.vg : t.diets.v) + "</span></div>" : "";
+      const al = showAl && it[6].length
+        ? '<p class="al-text">' + t.contains + ": " + it[6].map((k) => avoid.has(k) ? '<b class="hit">' + alName(k) + "</b>" : alName(k)).join(", ") + "</p>" : "";
+      return '<li class="dish' + (dishFits(it) ? "" : " nofit") + '" id="d-' + key(ci, ii).replace(":", "-") + '"><div><h3>' + it[n] + "</h3>" + det + tags + al + '</div><span class="price">' + price +
+        '</span><button type="button" class="fav" data-k="' + key(ci, ii) + '" aria-pressed="' + on + '" aria-label="' + (on ? t.rmFav : t.addFav) + ": " + it[n] + '">' + heart + "</button></li>";
+    }).join("");
+    const note = c.note && !query ? '<p class="note">' + c.note[lang === "es" ? 0 : 1] + "</p>" : "";
+    const extras = c.extras && !query ? '<div class="extras"><h3>' + t.extras + "</h3><ul>" +
+      c.extras.map((e) => "<li><span>" + e[lang === "es" ? 0 : 1] + "</span><span>" + money(e[2]) + "</span></li>").join("") + "</ul></div>" : "";
+    html += '<section class="section" id="' + c.id + '" data-sec="' + c.id + '"><h2>' + c[lang] + "</h2>" + note + '<ul class="dishes">' + items + "</ul>" + extras + "</section>";
+  });
+  $("menu").innerHTML = html;
+  $("qInfo").textContent = !query ? "" : total ? total + " " + (total === 1 ? t.result1 : t.results) : t.none + " «" + query + "»";
+  // asegura que el grupo y la categoría activos existen
+  const cur = MENU.find((c) => c.id === curSec);
+  if (!cur || !visible.has(curSec)) {
+    const first = MENU.find((c) => visible.has(c.id));
+    if (first) { curSec = first.id; curGroup = first.group; }
+  }
+  renderStars();
+  renderBar();
+  observe();
+  renderTray();
+}
+
+function renderBar() {
+  const hasGroup = (g) => MENU.some((c) => c.group === g && visible.has(c.id));
+  $("seg").innerHTML = Object.keys(GROUPS).map((g) =>
+    '<button type="button" data-g="' + g + '" aria-pressed="' + (g === curGroup) + '"' + (hasGroup(g) ? "" : " disabled") + ">" + GROUPS[g][lang] + "</button>").join("");
+  $("chips").innerHTML = MENU.filter((c) => c.group === curGroup && visible.has(c.id)).map((c) =>
+    '<button type="button" class="chip" data-c="' + c.id + '" aria-current="' + (c.id === curSec) + '">' + c[lang] + "</button>").join("");
+  const active = document.querySelector('.chip[aria-current="true"]');
+  if (active) $("chips").scrollTo({ left: active.offsetLeft - 16, behavior: "auto" });
+}
+
+function trayTotals() {
+  let count = 0, sum = 0;
+  picked.forEach((q, k) => { count += q; sum += q * byKey(k)[4]; });
+  return { count, sum };
+}
+
+function renderTray() {
+  const t = UI[lang];
+  $("tray").hidden = picked.size === 0;
+  if (!picked.size) { $("trayBody").hidden = true; $("trayHead").setAttribute("aria-expanded", "false"); return; }
+  const [n] = ai();
+  const { count, sum } = trayTotals();
+  const open = !$("trayBody").hidden;
+  $("trayList").innerHTML = [...picked].map(([k, q]) => {
+    const it = byKey(k);
+    return '<li><span class="nm">' + it[n] + '</span><span class="step"><button type="button" data-step="-1" data-k="' + k + '" aria-label="' + t.dec + ": " + it[n] + '">−</button><span>' + q +
+      '</span><button type="button" data-step="1" data-k="' + k + '" aria-label="' + t.inc + ": " + it[n] + '">+</button></span><span class="pr">' + money(it[4] * q) + "</span></li>";
+  }).join("");
+  $("trayCount").textContent = count + " " + (count === 1 ? t.sel1 : t.selN);
+  $("trayHint").textContent = open ? t.trayHide : t.trayShow;
+  $("trayTotal").textContent = money(sum);
+  $("trayTotal").setAttribute("aria-label", t.total + ": " + money(sum));
+}
+
+function syncFav(k) {
+  const el = document.querySelector('.fav[data-k="' + k + '"]');
+  if (!el) return;
+  const on = picked.has(k), t = UI[lang], old = el.getAttribute("aria-label");
+  el.setAttribute("aria-pressed", String(on));
+  el.setAttribute("aria-label", (on ? t.rmFav : t.addFav) + old.slice(old.indexOf(":")));
+}
+
+function openWaiter() {
+  const es = WAITER.es, en = WAITER.en, other = lang !== "es";
+  const items = [...picked].map(([k, q]) => {
+    const it = byKey(k);
+    return '<li><span class="w-qty">' + q + '×</span><span class="w-name">' + it[0] +
+      (other && it[2] !== it[0] ? '<span class="w-trans">' + it[2] + "</span>" : "") + "</span></li>";
+  }).join("");
+  let extra = "";
+  const avoidList = showAl ? [...avoid].sort((a, b) => a - b) : [];
+  if (avoidList.length) {
+    extra += '<div class="w-avoid"><b>' + es.avoid + "</b> " + avoidList.map((k) => alName(k, "es")).join(", ") +
+      (other ? "<small>" + en.avoid + " " + avoidList.map((k) => alName(k, "en")).join(", ") + "</small>" : "") + "</div>";
+  }
+  if (diet.size) {
+    extra += '<div class="w-avoid"><b>' + es.diet + "</b> " + [...diet].map((k) => UI.es.diets[k]).join(", ") +
+      (other ? "<small>" + en.diet + " " + [...diet].map((k) => UI.en.diets[k]).join(", ") + "</small>" : "") + "</div>";
+  }
+  $("waiterBody").innerHTML = '<div class="waiter-top"><span></span><button type="button" class="btn small" id="waiterClose">' + UI[lang].close + "</button></div>" +
+    "<h2>" + es.title + "</h2>" + (other ? '<p class="sub">' + en.title + "</p>" : '<p class="sub"></p>') +
+    '<ul class="w-list">' + items + "</ul>" + extra +
+    '<p class="w-note">' + es.note + (other ? "<br>" + en.note : "") + "</p>";
+  $("waiter").hidden = false;
+  document.body.style.overflow = "hidden";
+  $("waiterClose").focus();
+}
+function closeWaiter() { $("waiter").hidden = true; document.body.style.overflow = ""; }
+
+let io;
+function observe() {
+  if (io) io.disconnect();
+  io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const c = MENU.find((x) => x.id === e.target.dataset.sec);
+      if (!c || c.id === curSec) return;
+      curSec = c.id;
+      curGroup = c.group;
+      renderBar();
+    });
+  }, { rootMargin: "-130px 0px -70% 0px" });
+  document.querySelectorAll("[data-sec]").forEach((s) => io.observe(s));
+}
+
+document.addEventListener("click", (ev) => {
+  const refresh = () => { saveFilters(avoid, diet); renderControls(); renderMenu(); };
+  if (ev.target.closest("#waiterClose")) { closeWaiter(); return; }
+  if (ev.target.closest("#waiterBtn")) { openWaiter(); return; }
+  if (ev.target.closest("#alToggle")) { showAl = !showAl; saveAl(showAl); refresh(); return; }
+  if (ev.target.closest("#filtersBtn")) { panelOpen = !panelOpen; renderControls(); return; }
+  const dopt = ev.target.closest("[data-d]");
+  if (dopt) { const k = dopt.dataset.d; if (diet.has(k)) diet.delete(k); else diet.add(k); refresh(); return; }
+  const opt = ev.target.closest(".opt[data-a]");
+  if (opt) { const a = Number(opt.dataset.a); if (avoid.has(a)) avoid.delete(a); else avoid.add(a); refresh(); return; }
+  if (ev.target.closest("#filtersClear")) { avoid.clear(); diet.clear(); refresh(); return; }
+  const go = ev.target.closest("[data-go]");
+  if (go) {
+    const el = document.getElementById("d-" + go.dataset.go.replace(":", "-"));
+    if (el) {
+      el.scrollIntoView({ block: "center" });
+      el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+    }
+    return;
+  }
+  const chip = ev.target.closest(".chip");
+  if (chip) { document.getElementById(chip.dataset.c)?.scrollIntoView(); return; }
+  const seg = ev.target.closest("[data-g]");
+  if (seg && !seg.disabled) { document.getElementById(seg.dataset.g)?.scrollIntoView(); return; }
+  const l = ev.target.closest("[data-l]");
+  if (l && !l.disabled) { lang = l.dataset.l; saveLang(lang); renderStatic(); return; }
+  const step = ev.target.closest("[data-step]");
+  if (step) {
+    const k = step.dataset.k, q = (picked.get(k) || 0) + Number(step.dataset.step);
+    if (q <= 0) picked.delete(k); else picked.set(k, q);
+    syncFav(k);
+    renderTray();
+    return;
+  }
+  const fav = ev.target.closest(".fav");
+  if (fav) {
+    const k = fav.dataset.k;
+    if (picked.has(k)) picked.delete(k); else picked.set(k, 1);
+    syncFav(k);
+    renderTray();
+    return;
+  }
+  if (ev.target.closest("#trayHead")) {
+    const body = $("trayBody");
+    body.hidden = !body.hidden;
+    $("trayHead").setAttribute("aria-expanded", String(!body.hidden));
+    renderTray();
+    return;
+  }
+  if (ev.target.closest("#trayClear")) { picked.clear(); closeWaiter(); renderMenu(); }
+});
+
+$("q").addEventListener("input", (ev) => { query = ev.target.value.trim(); renderMenu(); });
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !$("waiter").hidden) closeWaiter(); });
+
+renderStatic();

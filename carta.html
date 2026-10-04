@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sunsets Beach · Carta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap slim">
+  <a href="index.html" id="homeLink"><svg viewBox="0 0 34 34" aria-hidden="true"><defs><clipPath id="lg"><rect width="34" height="34" rx="9"/></clipPath></defs><g clip-path="url(#lg)"><rect width="34" height="34" fill="var(--sky-b)"/><circle cx="17" cy="21" r="9" fill="var(--sun)"/><rect y="21" width="34" height="13" fill="var(--sea-a)"/><rect x="9" y="24" width="16" height="2" rx="1" fill="var(--glint)"/><rect x="13" y="28" width="8" height="2" rx="1" fill="var(--glint)"/></g></svg><span>Sunsets Beach</span></a>
+  <span class="where" id="whereLabel"></span>
+</div>
+
+<div class="bar">
+  <div class="wrap bar-inner">
+    <div class="bar-top">
+      <div class="seg" id="seg"></div>
+      <div class="lang" id="lang" aria-label="Idioma"></div>
+    </div>
+    <nav class="chips" id="chips" aria-label="Categorías"></nav>
+  </div>
+</div>
+
+<main>
+  <div class="wrap search"><input type="search" id="q" autocomplete="off" aria-label="Buscar"><p class="search-info" id="qInfo" aria-live="polite"></p></div>
+  <div class="wrap" id="alControls"></div>
+  <div class="wrap stars-wrap" id="starsWrap"></div>
+  <div class="wrap" id="menu"></div>
+  <footer class="wrap">
+    <p id="addr"></p>
+    <p id="phone"></p>
+    <p><a class="btn" id="reserve" href="#" target="_blank" rel="noopener"></a></p>
+  </footer>
+</main>
+
+<div class="tray" id="tray" hidden>
+  <div class="tray-inner">
+    <button class="tray-head" id="trayHead" aria-expanded="false" aria-controls="trayBody">
+      <span class="grab" aria-hidden="true"></span>
+      <span class="th-left"><span id="trayCount"></span><small id="trayHint"></small></span>
+      <span class="th-right"><span class="tray-total" id="trayTotal"></span><span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></span></span>
+    </button>
+    <div id="trayBody" hidden>
+      <ul class="tray-list" id="trayList"></ul>
+      <p class="tray-note" id="trayNote"></p>
+      <div class="tray-actions">
+        <button class="btn primary small" id="waiterBtn" type="button"></button>
+        <button class="link-btn" id="trayClear" type="button"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="waiter" id="waiter" role="dialog" aria-modal="true" hidden>
+  <div class="waiter-inner" id="waiterBody"></div>
+</div>
+<script src="data.js"></script>
+<script src="carta.js"></script>
+</body>
+</html>
