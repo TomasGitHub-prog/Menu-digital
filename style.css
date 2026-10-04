@@ -290,8 +290,8 @@ footer p { margin: 0 0 4px; }
 #filtersBtn { flex: none; }
 
 /* ---- hoja de filtros ---- */
-.sheet-back { position: fixed; inset: 0; z-index: 20; background: rgba(2, 10, 20, 0.6); }
-.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; max-height: 86vh; overflow-y: auto; background: var(--bg); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 18px 18px calc(22px + env(safe-area-inset-bottom, 0px)); }
+.sheet-back { position: fixed; inset: 0; z-index: 20; background: rgba(2, 10, 20, 0.72); }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; max-height: 86vh; overflow-y: auto; background: var(--raised); border-top: 2px solid var(--raised-line); box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.45); border-radius: 20px 20px 0 0; padding: 18px 18px calc(22px + env(safe-area-inset-bottom, 0px)); }
 .sheet-inner { max-width: 640px; margin: 0 auto; }
 .sheet-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .sheet h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; margin: 0; }
@@ -345,3 +345,8 @@ footer p { margin: 0 0 4px; }
 @keyframes chipsIn { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .chip, .seg button { transition: none; } .chips.swap { animation: none; } }
 .chips-end { flex: 0 0 0; }
+.sheet .opt { border-color: color-mix(in srgb, var(--ink) 35%, transparent); }
+.sheet .opt[aria-pressed="true"] { border-color: var(--accent); }
+.sheet .switch .track { background: color-mix(in srgb, var(--ink) 30%, transparent); }
+.sheet .switch[aria-checked="true"] .track { background: var(--accent); }
+.sheet .tag { background: color-mix(in srgb, var(--ink) 14%, transparent); }

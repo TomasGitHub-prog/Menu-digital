@@ -30,7 +30,7 @@ Nombres y precios: carta publicada en mallorca-touristguide.co.uk (versión en e
 - Revisar con el dueño nombres de bebidas y marcas (se corrigieron erratas evidentes de la fuente).
 
 ## Tema
-Oscuro por defecto (más acorde con el local de playa y atardecer). El claro se elige en Filtros → Tema y se recuerda (`sb-theme`).
+Oscuro por defecto. El dueño elige el tema inicial con `data-default-theme="dark"` o `"light"` en la etiqueta `<html>` de `carta.html` e `index.html`; el cliente lo cambia en Filtros → Tema y su elección se recuerda (`sb-theme`) y manda sobre la del dueño.
 
 ## Resumen inferior y ficha de plato
 - El resumen de la selección tiene tres estados (cerrado, abierto, ampliado): se cambian tocando o arrastrando el asa.
