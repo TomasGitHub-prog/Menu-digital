@@ -182,9 +182,25 @@ function renderBar() {
   }
   const active = chips.querySelector('.chip[aria-current="true"]');
   if (active) {
-    const left = Math.max(0, active.offsetLeft - (chips.clientWidth - active.offsetWidth) / 2);
-    chips.scrollTo({ left, behavior: rebuilt || reduce ? "auto" : "smooth" });
+    // La categoría activa queda siempre pegada al borde izquierdo (salvo al final de la lista).
+    const left = Math.max(0, chips.scrollLeft + active.getBoundingClientRect().left - chips.getBoundingClientRect().left);
+    if (rebuilt || reduce) { cancelAnimationFrame(chipsAnim); chips.scrollLeft = left; } else glideChips(chips, left);
   }
+}
+
+// Desplazamiento propio de la barra: más lento y con aceleración y frenado suaves.
+let chipsAnim = 0;
+function glideChips(el, to) {
+  cancelAnimationFrame(chipsAnim);
+  const from = el.scrollLeft, dist = to - from, dur = Math.min(900, 420 + Math.abs(dist) * 0.9), t0 = performance.now();
+  if (Math.abs(dist) < 1) return;
+  const ease = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+  const step = (now) => {
+    const p = Math.min(1, (now - t0) / dur);
+    el.scrollLeft = from + dist * ease(p);
+    if (p < 1) chipsAnim = requestAnimationFrame(step);
+  };
+  chipsAnim = requestAnimationFrame(step);
 }
 
 function trayTotals() {
