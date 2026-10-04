@@ -36,3 +36,6 @@ Oscuro por defecto. El dueño elige el tema inicial con `data-default-theme="dar
 - El resumen de la selección tiene tres estados (cerrado, abierto, ampliado): se cambian tocando o arrastrando el asa.
 - **Ficha de plato** (opcional): `FICHAS_ON` y `DETAIL` en `data.js`. Al tocar un plato con ficha se abre una hoja con foto, descripción corta, ingredientes y alérgenos. Ejemplo: Paella ciega. La foto (`plato-paella-ciega.jpg`) es una imagen de ejemplo hecha con IA, solo para el prototipo: en una carta real irán fotos del propio restaurante, nunca fotos de platos generadas por IA ni de terceros.
 - **Versión de los archivos:** los enlaces a CSS y JS llevan `?v=...` para que el móvil no use una copia antigua. Al publicar cambios, hay que subir ese número en `carta.html` e `index.html`.
+
+## Fotos de la portada
+La sección "El local" muestra un carrusel con `foto-terraza.jpg`, `foto-pizza-y-nachos.jpg` y `foto-copa-de-vino.jpg` (lista `PHOTOS` en `portada.js`, con texto alternativo en español e inglés). Son imágenes de ejemplo hechas con IA: en un local real se sustituyen por las fotos del dueño. Si una foto no carga, su hueco se oculta.

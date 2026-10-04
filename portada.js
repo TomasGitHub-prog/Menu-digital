@@ -1,6 +1,12 @@
 let lang = loadLang();
 const $ = (id) => document.getElementById(id);
 
+// Fotos de la portada. De ejemplo, hechas con IA: en un cliente real son del propio restaurante.
+const PHOTOS = [
+  { src: "foto-terraza.jpg?v=20261004i", alt: ["Terraza frente al mar al atardecer, con mesas y un pulpo a la parrilla en primer plano", "Seafront terrace at sunset, with tables and grilled octopus in the foreground"] },
+  { src: "foto-pizza-y-nachos.jpg?v=20261004i", alt: ["Pizza con burrata y jamón, nachos con guacamole y refrescos frente a la playa", "Burrata and ham pizza, nachos with guacamole and soft drinks by the beach"] },
+  { src: "foto-copa-de-vino.jpg?v=20261004i", alt: ["Copa de vino blanco sobre una mesa con la playa al atardecer de fondo", "Glass of white wine on a table with the beach at sunset behind"] }
+];
 const P = {
   es: {
     about: "Sobre el local",
@@ -78,7 +84,9 @@ function render() {
   $("aboutP").textContent = p.aboutText;
   $("serviceP").textContent = p.service;
   $("photosH").textContent = p.photos;
-  $("photos").innerHTML = [0, 1, 2].map(() => '<div class="ph">' + p.photoSlot + "</div>").join("");
+  const li = lang === "es" ? 0 : 1;
+  $("photos").innerHTML = PHOTOS.map((f) => '<figure class="shot"><img src="' + f.src + '" alt="' + f.alt[li] + '" loading="lazy" draggable="false"><span class="ph">' + p.photoSlot + "</span></figure>").join("");
+  $("photos").querySelectorAll("img").forEach((im) => im.addEventListener("error", () => im.parentNode.classList.add("no-photo")));
   $("findH").textContent = p.find;
   $("addr").textContent = t.addr;
   $("phone").textContent = t.phone;

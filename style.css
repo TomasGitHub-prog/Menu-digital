@@ -174,8 +174,13 @@ footer p { margin: 0 0 4px; }
 .p-section { padding-top: 34px; }
 .p-section h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; letter-spacing: -0.01em; margin: 0 0 10px; }
 .p-section p { margin: 0 0 8px; max-width: 60ch; }
-.photos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-.ph { aspect-ratio: 4 / 3; max-width: 100%; border: 1.5px dashed var(--line); border-radius: 14px; background: var(--chip); display: grid; place-items: center; text-align: center; padding: 10px; color: var(--muted); font-size: 0.88rem; }
+.photos { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin-top: 12px; padding-bottom: 6px; scrollbar-width: thin; }
+.shot { position: relative; flex: 0 0 66%; max-width: 280px; margin: 0; aspect-ratio: 3 / 4; border-radius: 16px; overflow: hidden; background: var(--chip); scroll-snap-align: start; }
+.shot img { width: 100%; height: 100%; object-fit: cover; display: block; -webkit-user-drag: none; }
+.shot .ph { display: none; position: absolute; inset: 0; place-items: center; text-align: center; padding: 10px; color: var(--muted); font-size: 0.88rem; border: 1.5px dashed var(--line); border-radius: 16px; }
+.shot.no-photo img { display: none; }
+.shot.no-photo .ph { display: grid; }
+@media (min-width: 600px) { .shot { flex: 1 1 0; max-width: none; } }
 .hours { margin: 0; padding: 0; }
 .hours div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px dotted var(--line); font-variant-numeric: tabular-nums; }
 .hours dt { font-weight: 500; }
