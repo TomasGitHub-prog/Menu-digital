@@ -34,4 +34,5 @@ Oscuro por defecto (más acorde con el local de playa y atardecer). El claro se 
 
 ## Resumen inferior y ficha de plato
 - El resumen de la selección tiene tres estados (cerrado, abierto, ampliado): se cambian tocando o arrastrando el asa.
-- **Ficha de plato** (opcional): `FICHAS_ON` y `DETAIL` en `data.js`. Al tocar un plato con ficha se abre una hoja con foto, descripción corta, ingredientes y alérgenos. Ejemplo: Paella ciega. La foto (`plato-paella-ciega.jpg`) es de ejemplo y viene de Google Maps: no se publica en GitHub; sin ella la ficha muestra "Foto próximamente". Sustituir por una foto propia del restaurante.
+- **Ficha de plato** (opcional): `FICHAS_ON` y `DETAIL` en `data.js`. Al tocar un plato con ficha se abre una hoja con foto, descripción corta, ingredientes y alérgenos. Ejemplo: Paella ciega. La foto (`plato-paella-ciega.jpg`) es una imagen de ejemplo hecha con IA, solo para el prototipo: en una carta real irán fotos del propio restaurante, nunca fotos de platos generadas por IA ni de terceros.
+- **Versión de los archivos:** los enlaces a CSS y JS llevan `?v=...` para que el móvil no use una copia antigua. Al publicar cambios, hay que subir ese número en `carta.html` e `index.html`.
