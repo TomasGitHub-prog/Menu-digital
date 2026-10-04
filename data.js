@@ -13,7 +13,7 @@ const UI = {
     addr: "Passeig Marítim 51, 07579 Colònia de Sant Pere", phone: "Teléfono 971 76 96 05",
     extras: "Extras para la burger", soonLang: "Próximamente",
     demo: "<b>Alérgenos de ejemplo</b>, orientativos hasta confirmarlos con el restaurante.",
-    viewCard: "Ver ficha", ingredients: "Ingredientes", allergensH: "Alérgenos", noAllergens: "Sin alérgenos declarados", addSel: "Añadir a mi selección", rmSel: "Quitar de mi selección", closeCard: "Cerrar ficha", photoSoon: "Foto próximamente", trayExpand: "Desliza hacia arriba para ampliar",
+    viewCard: "Ver foto y detalles", ingredients: "Ingredientes", allergensH: "Alérgenos", noAllergens: "Sin alérgenos declarados", addSel: "Añadir a mi selección", rmSel: "Quitar de mi selección", closeCard: "Cerrar ficha", photoSoon: "Foto próximamente", trayExpand: "Desliza hacia arriba para ampliar",
     theme: "Tema", themeDark: "Oscuro", themeLight: "Claro", done: "Listo", langLabel: "Idioma", searchOpen: "Buscar", back: "Volver",
     legend: "Leyenda de alérgenos", noAl: "Alérgenos", cartaTitle: "Carta", seeMenu: "Ver la carta", home: "Inicio",
     contains: "Contiene", alShow: "Mostrar alérgenos en los platos", filters: "Filtros", dietTitle: "Mi dieta", avoidTitle: "Evitar alérgenos",
@@ -37,7 +37,7 @@ const UI = {
     addr: "Passeig Marítim 51, 07579 Colònia de Sant Pere", phone: "Phone +34 971 76 96 05",
     extras: "Burger extras", soonLang: "Coming soon",
     demo: "<b>Sample allergens</b>, indicative until confirmed with the restaurant.",
-    viewCard: "View details", ingredients: "Ingredients", allergensH: "Allergens", noAllergens: "No allergens declared", addSel: "Add to my selection", rmSel: "Remove from my selection", closeCard: "Close details", photoSoon: "Photo coming soon", trayExpand: "Swipe up to expand",
+    viewCard: "View photo and details", ingredients: "Ingredients", allergensH: "Allergens", noAllergens: "No allergens declared", addSel: "Add to my selection", rmSel: "Remove from my selection", closeCard: "Close details", photoSoon: "Photo coming soon", trayExpand: "Swipe up to expand",
     theme: "Theme", themeDark: "Dark", themeLight: "Light", done: "Done", langLabel: "Language", searchOpen: "Search", back: "Back",
     legend: "Allergen key", noAl: "Allergens", cartaTitle: "Menu", seeMenu: "See the menu", home: "Home",
     contains: "Contains", alShow: "Show allergens on dishes", filters: "Filters", dietTitle: "My diet", avoidTitle: "Avoid allergens",
@@ -235,7 +235,7 @@ const STARS = ["Paella ciega", "Calamar rebozado", "Solomillo de ternera con que
 const FICHAS_ON = true;
 const DETAIL = {
   "Paella ciega": {
-    photo: "plato-paella-ciega.jpg?v=20261004b",
+    photo: "plato-paella-ciega.jpg?v=20261004c",
     alt: ["Plato de arroz con pollo y marisco", "Rice dish with chicken and seafood"],
     short: ["Arroz con pollo y marisco, pensado para comer sin complicaciones: sin cáscaras ni huesos.", "Rice with chicken and seafood, made to eat with no fuss: no shells, no bones."],
     ingredients: [["Arroz", "Pollo", "Calamar", "Mejillones", "Almejas", "Zamburiñas"], ["Rice", "Chicken", "Squid", "Mussels", "Clams", "Queen scallops"]]

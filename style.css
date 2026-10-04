@@ -312,8 +312,9 @@ footer p { margin: 0 0 4px; }
 @media (prefers-reduced-motion: reduce) { .tray-body, .tray-list { transition: none; } }
 
 /* ---- ficha de plato ---- */
-.tag-ficha { display: inline-flex; align-items: center; gap: 5px; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); background: transparent; color: var(--accent); cursor: pointer; font-family: inherit; }
-.tag-ficha svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.cam, .cam-ico { display: inline-grid; place-items: center; width: 22px; height: 22px; margin: -4px 0 -4px 7px; vertical-align: middle; color: var(--accent); }
+.cam { border: 0; background: transparent; padding: 0; cursor: pointer; border-radius: 6px; }
+.cam svg, .cam-ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
 .dish.has-ficha { cursor: pointer; }
 .ficha { padding: 0; max-height: 92dvh; }
 .ficha-photo { position: relative; aspect-ratio: 4 / 3; max-height: 46dvh; width: 100%; background: var(--chip); touch-action: none; overflow: hidden; border-radius: 20px 20px 0 0; }

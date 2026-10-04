@@ -11,6 +11,7 @@ let visible = new Set();                  // ids de categorías con resultados
 const $ = (id) => document.getElementById(id);
 const money = (n) => moneyFmt(n, lang);
 const heart = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.35-9.33-8.85C1.2 9.2 2.8 5.5 6.3 5.5c2 0 3.7 1.1 5.7 3.2 2-2.1 3.7-3.2 5.7-3.2 3.5 0 5.1 3.7 3.63 6.65C19 16.65 12 21 12 21z" stroke-linejoin="round"/></svg>';
+const CAM = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>';
 const key = (ci, ii) => ci + ":" + ii;
 const byKey = (k) => { const [ci, ii] = k.split(":").map(Number); return MENU[ci].items[ii]; };
 const ai = () => (lang === "es" ? [0, 1] : [2, 3]);
@@ -101,7 +102,7 @@ function renderStars() {
       const ii = MENU[ci].items.findIndex((it) => it[0] === name);
       if (ii >= 0) {
         const it = MENU[ci].items[ii];
-        return '<button type="button" class="star' + (dishFits(it) ? "" : " nofit") + '" data-go="' + key(ci, ii) + '"><h3>' + it[n] + "</h3><p>" + it[d] +
+        return '<button type="button" class="star' + (dishFits(it) ? "" : " nofit") + '" data-go="' + key(ci, ii) + '"><h3>' + it[n] + (FICHAS_ON && DETAIL[it[0]] ? '<span class="cam-ico">' + CAM + "</span>" : "") + "</h3><p>" + it[d] +
           '</p><span class="sp">' + money(it[4]) + (it[5] ? " <small>" + t.pp + "</small>" : "") + "</span></button>";
       }
     }
@@ -129,12 +130,11 @@ function renderMenu() {
       const price = money(it[4]) + (it[5] ? "<small>" + t.pp + "</small>" : "");
       const det = it[d] ? "<p>" + detail(it[d], t) + "</p>" : "";
       const fd = FICHAS_ON && DETAIL[it[0]];
-      const chips = (it[7] && it[7].length ? '<span class="tag">' + (it[7].includes("vg") ? t.diets.vg : t.diets.v) + "</span>" : "") +
-        (fd ? '<button type="button" class="tag tag-ficha" aria-label="' + t.viewCard + ": " + it[n] + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>' + t.viewCard + "</button>" : "");
-      const tags = chips ? '<div class="tags">' + chips + "</div>" : "";
+      const tags = it[7] && it[7].length ? '<div class="tags"><span class="tag">' + (it[7].includes("vg") ? t.diets.vg : t.diets.v) + "</span></div>" : "";
+      const cam = fd ? '<button type="button" class="cam" aria-label="' + t.viewCard + ": " + it[n] + '">' + CAM + "</button>" : "";
       const al = showAl && it[6].length
         ? '<p class="al-text">' + t.contains + ": " + it[6].map((k) => avoid.has(k) ? '<b class="hit">' + alName(k) + "</b>" : alName(k)).join(", ") + "</p>" : "";
-      return '<li class="dish' + (dishFits(it) ? "" : " nofit") + (fd ? " has-ficha" : "") + '"' + (fd ? ' data-ficha="' + key(ci, ii) + '"' : "") + ' id="d-' + key(ci, ii).replace(":", "-") + '"><div><h3>' + it[n] + "</h3>" + det + tags + al + '</div><span class="price">' + price +
+      return '<li class="dish' + (dishFits(it) ? "" : " nofit") + (fd ? " has-ficha" : "") + '"' + (fd ? ' data-ficha="' + key(ci, ii) + '"' : "") + ' id="d-' + key(ci, ii).replace(":", "-") + '"><div><h3>' + it[n] + cam + "</h3>" + det + tags + al + '</div><span class="price">' + price +
         '</span><button type="button" class="fav" data-k="' + key(ci, ii) + '" aria-pressed="' + on + '" aria-label="' + (on ? t.rmFav : t.addFav) + ": " + it[n] + '">' + heart + "</button></li>";
     }).join("");
     const note = c.note && !query ? '<p class="note">' + c.note[lang === "es" ? 0 : 1] + "</p>" : "";
@@ -253,7 +253,7 @@ function closeFicha() {
 function bindFichaSwipe() {
   const ph = document.getElementById("fichaPhoto");
   let y0 = null;
-  ph.addEventListener("pointerdown", (e) => { y0 = e.clientY; ph.setPointerCapture(e.pointerId); });
+  ph.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; y0 = e.clientY; ph.setPointerCapture(e.pointerId); });
   ph.addEventListener("pointerup", (e) => { if (y0 !== null && e.clientY - y0 > 70) closeFicha(); y0 = null; });
   ph.addEventListener("pointercancel", () => { y0 = null; });
 }
@@ -342,6 +342,7 @@ document.addEventListener("click", (ev) => {
   if (ev.target.closest("#filtersClear, #sheetClear")) { avoid.clear(); diet.clear(); refresh(); return; }
   const go = ev.target.closest("[data-go]");
   if (go) {
+    if (FICHAS_ON && DETAIL[byKey(go.dataset.go)[0]]) { openFicha(go.dataset.go); return; }
     const el = document.getElementById("d-" + go.dataset.go.replace(":", "-"));
     if (el) {
       el.scrollIntoView({ block: "center" });
