@@ -174,7 +174,8 @@ function renderBar() {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const rebuilt = chips.dataset.sig !== sig;
   if (rebuilt) {
-    chips.innerHTML = list.map((c) => '<button type="button" class="chip" data-c="' + c.id + '" aria-current="' + (c.id === curSec) + '">' + c[lang] + "</button>").join("");
+    chips.innerHTML = list.map((c) => '<button type="button" class="chip" data-c="' + c.id + '" aria-current="' + (c.id === curSec) + '">' + c[lang] + "</button>").join("") + '<span class="chips-end" aria-hidden="true"></span>';
+    fitChipsEnd();
     chips.dataset.sig = sig;
     chips.classList.remove("swap"); void chips.offsetWidth; if (!reduce) chips.classList.add("swap");
   } else {
@@ -187,6 +188,13 @@ function renderBar() {
     if (rebuilt || reduce) { cancelAnimationFrame(chipsAnim); chips.scrollLeft = left; } else glideChips(chips, left);
   }
 }
+
+// Espacio en blanco al final de la barra: así hasta la última categoría puede quedar pegada a la izquierda.
+function fitChipsEnd() {
+  const chips = $("chips"), last = chips.querySelector(".chip:last-of-type"), end = chips.querySelector(".chips-end");
+  if (last && end) end.style.flexBasis = Math.max(0, chips.clientWidth - last.offsetWidth) + "px";
+}
+window.addEventListener("resize", fitChipsEnd);
 
 // Desplazamiento propio de la barra: más lento y con aceleración y frenado suaves.
 let chipsAnim = 0;

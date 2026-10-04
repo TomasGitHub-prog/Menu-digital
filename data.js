@@ -235,7 +235,7 @@ const STARS = ["Paella ciega", "Calamar rebozado", "Solomillo de ternera con que
 const FICHAS_ON = true;
 const DETAIL = {
   "Paella ciega": {
-    photo: "plato-paella-ciega.jpg?v=20261004f",
+    photo: "plato-paella-ciega.jpg?v=20261004g",
     alt: ["Plato de arroz con pollo y marisco", "Rice dish with chicken and seafood"],
     short: ["Arroz con pollo y marisco, pensado para comer sin complicaciones: sin cáscaras ni huesos.", "Rice with chicken and seafood, made to eat with no fuss: no shells, no bones."],
     ingredients: [["Arroz", "Pollo", "Calamar", "Mejillones", "Almejas", "Zamburiñas"], ["Rice", "Chicken", "Squid", "Mussels", "Clams", "Queen scallops"]]
