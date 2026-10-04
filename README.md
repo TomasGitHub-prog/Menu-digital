@@ -31,3 +31,7 @@ Nombres y precios: carta publicada en mallorca-touristguide.co.uk (versión en e
 
 ## Tema
 Oscuro por defecto (más acorde con el local de playa y atardecer). El claro se elige en Filtros → Tema y se recuerda (`sb-theme`).
+
+## Resumen inferior y ficha de plato
+- El resumen de la selección tiene tres estados (cerrado, abierto, ampliado): se cambian tocando o arrastrando el asa.
+- **Ficha de plato** (opcional): `FICHAS_ON` y `DETAIL` en `data.js`. Al tocar un plato con ficha se abre una hoja con foto, descripción corta, ingredientes y alérgenos. Ejemplo: Paella ciega. La foto (`plato-paella-ciega.jpg`) es de ejemplo y viene de Google Maps: no se publica en GitHub; sin ella la ficha muestra "Foto próximamente". Sustituir por una foto propia del restaurante.

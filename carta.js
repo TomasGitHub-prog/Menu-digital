@@ -5,6 +5,7 @@ const _f = loadFilters();
 const avoid = new Set(_f.avoid);
 const diet = new Set(_f.diet);
 let showAl = loadAl(), panelOpen = false, searchOpen = false, query = "";
+let trayState = "closed", dragged = false, fichaKey = null;
 let visible = new Set();                  // ids de categorías con resultados
 
 const $ = (id) => document.getElementById(id);
@@ -127,10 +128,13 @@ function renderMenu() {
       const on = picked.has(key(ci, ii));
       const price = money(it[4]) + (it[5] ? "<small>" + t.pp + "</small>" : "");
       const det = it[d] ? "<p>" + detail(it[d], t) + "</p>" : "";
-      const tags = it[7] && it[7].length ? '<div class="tags"><span class="tag">' + (it[7].includes("vg") ? t.diets.vg : t.diets.v) + "</span></div>" : "";
+      const fd = FICHAS_ON && DETAIL[it[0]];
+      const chips = (it[7] && it[7].length ? '<span class="tag">' + (it[7].includes("vg") ? t.diets.vg : t.diets.v) + "</span>" : "") +
+        (fd ? '<button type="button" class="tag tag-ficha" aria-label="' + t.viewCard + ": " + it[n] + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>' + t.viewCard + "</button>" : "");
+      const tags = chips ? '<div class="tags">' + chips + "</div>" : "";
       const al = showAl && it[6].length
         ? '<p class="al-text">' + t.contains + ": " + it[6].map((k) => avoid.has(k) ? '<b class="hit">' + alName(k) + "</b>" : alName(k)).join(", ") + "</p>" : "";
-      return '<li class="dish' + (dishFits(it) ? "" : " nofit") + '" id="d-' + key(ci, ii).replace(":", "-") + '"><div><h3>' + it[n] + "</h3>" + det + tags + al + '</div><span class="price">' + price +
+      return '<li class="dish' + (dishFits(it) ? "" : " nofit") + (fd ? " has-ficha" : "") + '"' + (fd ? ' data-ficha="' + key(ci, ii) + '"' : "") + ' id="d-' + key(ci, ii).replace(":", "-") + '"><div><h3>' + it[n] + "</h3>" + det + tags + al + '</div><span class="price">' + price +
         '</span><button type="button" class="fav" data-k="' + key(ci, ii) + '" aria-pressed="' + on + '" aria-label="' + (on ? t.rmFav : t.addFav) + ": " + it[n] + '">' + heart + "</button></li>";
     }).join("");
     const note = c.note && !query ? '<p class="note">' + c.note[lang === "es" ? 0 : 1] + "</p>" : "";
@@ -168,22 +172,90 @@ function trayTotals() {
   return { count, sum };
 }
 
+function setTray(st) {
+  trayState = st;
+  $("tray").dataset.state = st;
+  $("trayBody").inert = st === "closed";
+  $("trayHead").setAttribute("aria-expanded", String(st !== "closed"));
+  $("trayBack").hidden = st !== "full";
+  $("trayHint").textContent = UI[lang][st === "closed" ? "trayShow" : "trayHide"];
+}
+
 function renderTray() {
   const t = UI[lang];
   $("tray").hidden = picked.size === 0;
-  if (!picked.size) { $("trayBody").hidden = true; $("trayHead").setAttribute("aria-expanded", "false"); return; }
+  if (!picked.size) { setTray("closed"); return; }
   const [n] = ai();
   const { count, sum } = trayTotals();
-  const open = !$("trayBody").hidden;
   $("trayList").innerHTML = [...picked].map(([k, q]) => {
     const it = byKey(k);
     return '<li><span class="nm">' + it[n] + '</span><span class="step"><button type="button" data-step="-1" data-k="' + k + '" aria-label="' + t.dec + ": " + it[n] + '">−</button><span>' + q +
       '</span><button type="button" data-step="1" data-k="' + k + '" aria-label="' + t.inc + ": " + it[n] + '">+</button></span><span class="pr">' + money(it[4] * q) + "</span></li>";
   }).join("");
   $("trayCount").textContent = count + " " + (count === 1 ? t.sel1 : t.selN);
-  $("trayHint").textContent = open ? t.trayHide : t.trayShow;
   $("trayTotal").textContent = money(sum);
   $("trayTotal").setAttribute("aria-label", t.total + ": " + money(sum));
+  setTray(trayState);
+}
+
+// Arrastrar el asa del resumen: arriba amplía (cerrado → abierto → ampliado), abajo reduce.
+(function () {
+  const head = document.getElementById("trayHead");
+  let y0 = null, id = null;
+  head.addEventListener("pointerdown", (e) => { y0 = e.clientY; id = e.pointerId; dragged = false; head.setPointerCapture(id); });
+  head.addEventListener("pointermove", (e) => { if (y0 !== null && Math.abs(e.clientY - y0) > 8) dragged = true; });
+  const end = (e) => {
+    if (y0 === null) return;
+    const dy = e.clientY - y0; y0 = null;
+    if (Math.abs(dy) < 36) return;
+    const order = ["closed", "open", "full"], i = order.indexOf(trayState);
+    setTray(order[Math.max(0, Math.min(2, i + (dy < 0 ? 1 : -1)))]);
+  };
+  head.addEventListener("pointerup", end);
+  head.addEventListener("pointercancel", () => { y0 = null; });
+})();
+
+// ---- ficha de plato ----
+function renderFicha() {
+  const k = fichaKey, it = byKey(k), fd = DETAIL[it[0]], t = UI[lang], li = lang === "es" ? 0 : 1, [n] = ai();
+  const on = picked.has(k);
+  const al = it[6].length
+    ? it[6].map((a) => '<span class="tag' + (showAl && avoid.has(a) ? " hit" : "") + '">' + alName(a) + "</span>").join("")
+    : '<span class="muted">' + t.noAllergens + "</span>";
+  const dietTags = it[7] && it[7].length ? '<span class="tag">' + (it[7].includes("vg") ? t.diets.vg : t.diets.v) + "</span>" : "";
+  $("fichaWrap").innerHTML = '<div class="sheet-back" id="fichaBack"></div><div class="sheet ficha" role="dialog" aria-modal="true" aria-labelledby="fichaTitle">' +
+    '<div class="ficha-photo" id="fichaPhoto"><img draggable="false" src="' + fd.photo + '" alt="' + fd.alt[li] + '"><span class="ph-fallback">' + t.photoSoon + '</span>' +
+    '<span class="grab" aria-hidden="true"></span><button type="button" class="icon-btn ficha-close" id="fichaClose" aria-label="' + t.closeCard + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
+    '<div class="sheet-inner ficha-body"><div class="ficha-head"><h2 id="fichaTitle">' + it[n] + '</h2><span class="ficha-price">' + money(it[4]) + (it[5] ? "<small>" + t.pp + "</small>" : "") + "</span></div>" +
+    "<p class=\"ficha-short\">" + fd.short[li] + "</p>" +
+    (dietTags ? '<div class="tags">' + dietTags + "</div>" : "") +
+    "<h3>" + t.ingredients + '</h3><p class="ficha-ing">' + fd.ingredients[li].join(", ") + "</p>" +
+    "<h3>" + t.allergensH + '</h3><div class="tags al-tags">' + al + "</div>" +
+    '<button type="button" class="btn ' + (on ? "" : "primary ") + 'big ficha-add" id="fichaAdd">' + (on ? t.rmSel : t.addSel) + "</button></div></div>";
+  const img = document.querySelector("#fichaPhoto img");
+  const miss = () => document.getElementById("fichaPhoto").classList.add("no-photo");
+  img.addEventListener("error", miss);
+  if (img.complete && img.naturalWidth === 0) miss();
+  bindFichaSwipe();
+}
+function openFicha(k) {
+  fichaKey = k; renderFicha();
+  document.body.style.overflow = "hidden";
+  $("fichaClose").focus({ preventScroll: true });
+}
+function closeFicha() {
+  if (!fichaKey) return;
+  const k = fichaKey; fichaKey = null;
+  $("fichaWrap").innerHTML = "";
+  if ($("waiter").hidden) document.body.style.overflow = "";
+  document.getElementById("d-" + k.replace(":", "-"))?.focus({ preventScroll: true });
+}
+function bindFichaSwipe() {
+  const ph = document.getElementById("fichaPhoto");
+  let y0 = null;
+  ph.addEventListener("pointerdown", (e) => { y0 = e.clientY; ph.setPointerCapture(e.pointerId); });
+  ph.addEventListener("pointerup", (e) => { if (y0 !== null && e.clientY - y0 > 70) closeFicha(); y0 = null; });
+  ph.addEventListener("pointercancel", () => { y0 = null; });
 }
 
 function syncFav(k) {
@@ -239,6 +311,14 @@ function observe() {
 
 document.addEventListener("click", (ev) => {
   const refresh = () => { saveFilters(avoid, diet); renderControls(); renderMenu(); };
+  if (ev.target.closest("#fichaClose") || ev.target.closest("#fichaBack")) { closeFicha(); return; }
+  if (ev.target.closest("#fichaAdd")) {
+    const k = fichaKey;
+    if (picked.has(k)) picked.delete(k); else picked.set(k, 1);
+    syncFav(k); renderTray(); renderFicha(); document.getElementById("fichaAdd").focus({ preventScroll: true });
+    return;
+  }
+  if (ev.target.closest("#trayBack")) { setTray("open"); return; }
   if (ev.target.closest("#waiterClose")) { closeWaiter(); return; }
   if (ev.target.closest("#waiterBtn")) { openWaiter(); return; }
   if (ev.target.closest("#alToggle")) { showAl = !showAl; saveAl(showAl); refresh(); return; }
@@ -292,19 +372,21 @@ document.addEventListener("click", (ev) => {
     return;
   }
   if (ev.target.closest("#trayHead")) {
-    const body = $("trayBody");
-    body.hidden = !body.hidden;
-    $("trayHead").setAttribute("aria-expanded", String(!body.hidden));
-    renderTray();
+    if (dragged) { dragged = false; return; }
+    setTray(trayState === "closed" ? "open" : "closed");
     return;
   }
-  if (ev.target.closest("#trayClear")) { picked.clear(); closeWaiter(); renderMenu(); }
+  const row = ev.target.closest(".dish[data-ficha]");
+  if (row) { openFicha(row.dataset.ficha); return; }
+  if (ev.target.closest("#trayClear")) { picked.clear(); setTray("closed"); closeWaiter(); renderMenu(); }
 });
 
 $("q").addEventListener("input", (ev) => { const was = query; query = ev.target.value.trim(); if (was && !query) curSec = ""; renderMenu(); });
 document.addEventListener("keydown", (ev) => {
   if (ev.key !== "Escape") return;
   if (!$("waiter").hidden) closeWaiter();
+  else if (fichaKey) closeFicha();
+  else if (trayState === "full") setTray("open");
   else if (panelOpen) closeSheet();
   else if ($("langMenu").open) $("langMenu").open = false;
 });

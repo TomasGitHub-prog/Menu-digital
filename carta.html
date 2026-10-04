@@ -41,25 +41,27 @@
   </footer>
 </main>
 
-<div class="tray" id="tray" hidden>
+<div class="tray-back" id="trayBack" hidden></div>
+<div class="tray" id="tray" data-state="closed" hidden>
   <div class="tray-inner">
     <button class="tray-head" id="trayHead" aria-expanded="false" aria-controls="trayBody">
       <span class="grab" aria-hidden="true"></span>
       <span class="th-left"><span id="trayCount"></span><small id="trayHint"></small></span>
       <span class="th-right"><span class="tray-total" id="trayTotal"></span><span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></span></span>
     </button>
-    <div id="trayBody" hidden>
+    <div class="tray-body" id="trayBody" inert><div class="tray-body-in">
       <ul class="tray-list" id="trayList"></ul>
       <p class="tray-note" id="trayNote"></p>
       <div class="tray-actions">
         <button class="btn primary small" id="waiterBtn" type="button"></button>
         <button class="link-btn" id="trayClear" type="button"></button>
       </div>
-    </div>
+    </div></div>
   </div>
 </div>
 
 <div id="sheetWrap"></div>
+<div id="fichaWrap"></div>
 
 <div class="waiter" id="waiter" role="dialog" aria-modal="true" hidden>
   <div class="waiter-inner" id="waiterBody"></div>
