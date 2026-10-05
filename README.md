@@ -5,7 +5,8 @@ Ejemplo para el pitch, estilo "Playa y atardecer". Son dos páginas que comparte
 ## Archivos
 - `index.html`: portada (info del local, horario, cómo llegar, reservar, botón "Ver la carta"). Incluye datos estructurados `Restaurant` para Google y un estado "Abierto ahora / Cerrado ahora" calculado con la hora de Mallorca (constantes de horario al inicio de `portada.js`).
 - `carta.html`: carta con pestañas Comida / Bebidas, selección de platos con total aproximado y alérgenos.
-  - Los alérgenos se escriben en cursiva bajo cada plato. Un interruptor los muestra u oculta.
+  - **Índice de categorías:** al abrir la carta se ve la cuadrícula de iconos (3 columnas) del grupo activo; tocar un icono salta a esa categoría dentro de la lista continua. Comida / Bebidas cambia la cuadrícula en el sitio mientras está a la vista. Al bajar, el índice sale de la pantalla y aparece la barra fija de categorías con iconos (icono por categoría en `CAT_ICON`, `carta.js`; las categorías nuevas usan el icono de Tapas hasta que se añada el suyo).
+  - Los alérgenos se muestran bajo cada plato como etiquetas con icono (`AL_ICON`, uno por alérgeno); los que el cliente evita se resaltan en el color de aviso. Las etiquetas Vegetariano / Vegano llevan su propio icono. Un interruptor muestra u oculta los alérgenos.
   - Botón **Filtros**: "Mi dieta" (vegetariano, vegano, sin gluten, sin lactosa) y "Evitar alérgenos". Los platos que no encajan se atenúan, no se ocultan, para no sugerir que el resto es seguro. "Sin gluten" y "sin lactosa" se deducen de los alérgenos; vegetariano y vegano son datos del plato (`DIET` en `data.js`).
   - Los filtros, el interruptor y el idioma se recuerdan en el navegador del cliente (`localStorage`).
   - **Buscador** de platos y bebidas (sin distinguir tildes ni mayúsculas; también busca por nombre de categoría).

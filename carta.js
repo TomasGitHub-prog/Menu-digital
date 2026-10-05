@@ -1,5 +1,5 @@
 let lang = loadLang();
-let curGroup = "comida", curSec = "tapas";
+let curGroup = "comida", curSec = "tapas", gridGroup = "comida", pastGrid = false;
 const picked = new Map();                 // clave "cat:plato" -> cantidad
 const _f = loadFilters();
 const avoid = new Set(_f.avoid);
@@ -12,6 +12,56 @@ const $ = (id) => document.getElementById(id);
 const money = (n) => moneyFmt(n, lang);
 const heart = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.35-9.33-8.85C1.2 9.2 2.8 5.5 6.3 5.5c2 0 3.7 1.1 5.7 3.2 2-2.1 3.7-3.2 5.7-3.2 3.5 0 5.1 3.7 3.63 6.65C19 16.65 12 21 12 21z" stroke-linejoin="round"/></svg>';
 const CAM = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>';
+// ---- iconos de trazo (24×24): categorías, alérgenos y dieta ----
+const ico = (p) => '<svg viewBox="0 0 24 24" class="ico" aria-hidden="true">' + p + "</svg>";
+const WINE = `<path d="M8 3h8l-.5 6a3.5 3.5 0 0 1-7 0z"/><path d="M12 12.5V20M8.5 20h7"/><path d="M8.2 6.5h7.6"/>`;
+const CAT_ICON = {
+  tapas: `<path d="M3 17h18"/><path d="M5 17c0 1.5 3 2.5 7 2.5s7-1 7-2.5"/><path d="M6 14c0-2 2-3 6-3s6 1 6 3"/><path d="M14 4l-3 7"/>`,
+  ensaladas: `<path d="M3 12h18c0 4.5-4 8-9 8s-9-3.5-9-8z"/><path d="M7 12c0-3 1.5-4.5 3-4.5S12 9 12 12"/><path d="M12 12c0-4 2-6 4-6s2 3 1 6"/>`,
+  "pa-amb-oli": `<rect x="4" y="9" width="16" height="11" rx="2"/><path d="M4 10A4 4 0 0 1 7 4H17A4 4 0 0 1 20 10"/>`,
+  pizzas: `<path d="M3 6c6-3 12-3 18 0L12 21z"/><circle cx="10" cy="9.5" r="1"/><circle cx="14" cy="11" r="1"/><circle cx="12" cy="15" r="1"/>`,
+  burgers: `<path d="M4 11A8 6 0 0 1 20 11z"/><path d="M3 14h18"/><path d="M4 17h16v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>`,
+  woks: `<path d="M3 13h18c0 4-3.5 7-9 7s-9-3-9-7z"/><path d="M8 4c-1 1.5 1 2.5 0 4"/><path d="M12 4c-1 1.5 1 2.5 0 4"/><path d="M14 11l7-6"/>`,
+  carnes: `<circle cx="14.5" cy="9.5" r="5"/><path d="M11 13l-5 5"/><circle cx="5.5" cy="18.5" r="1.4"/><circle cx="7.5" cy="20.2" r="1.4"/>`,
+  pescados: `<path d="M3 12c3-5 9-6 13-3l5-3v12l-5-3c-4 3-10 2-13-3z"/><circle cx="8" cy="11" r=".8" fill="currentColor" stroke="none"/>`,
+  arroces: `<circle cx="12" cy="12" r="7"/><path d="M2 12h3M19 12h3"/><circle cx="9.5" cy="10" r="1"/><circle cx="14" cy="10.5" r="1"/><circle cx="12" cy="14" r="1"/>`,
+  postres: `<path d="M8 12h8l-4 9z"/><path d="M7.5 12a4.5 4.5 0 1 1 9 0"/>`,
+  refrescos: `<path d="M10 3h4v3l1.5 2.5V20a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1V8.5L10 6z"/><path d="M8.5 12h7"/>`,
+  cervezas: `<path d="M5 8h10v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M15 10h2.5a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H15"/><path d="M5 8c0-1.7 1.3-2.7 3-2.3.9-1 3.1-1 4 0 1.7-.4 3 .6 3 2.3"/>`,
+  aperitivos: `<path d="M6 5h12l-1.2 12a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8z"/><path d="M6.8 9h10.4"/><circle cx="16.5" cy="6.5" r="2"/>`,
+  cafes: `<path d="M5 10h11v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M9 4c-.8 1 .8 1.8 0 3M12.5 4c-.8 1 .8 1.8 0 3"/>`,
+  sangria: `<path d="M7 5h8v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z"/><path d="M15 8h2.5A1.5 1.5 0 0 1 19 9.5v3a1.5 1.5 0 0 1-1.5 1.5H15"/><circle cx="10" cy="12" r=".9"/><circle cx="12.5" cy="15.5" r=".9"/>`,
+  cocteles: `<path d="M4 5h16l-8 9z"/><path d="M12 14v6M8.5 20h7"/><path d="M15 3l-2.5 4"/>`,
+  destilados: `<path d="M6.5 6h11l-1 13a1 1 0 0 1-1 .9h-7a1 1 0 0 1-1-.9z"/><path d="M7 11h10"/>`,
+  combinados: `<path d="M8 4h8l-1 15.5a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1z"/><path d="M9.5 9h5"/><path d="M14.5 2.5l-2 4"/>`,
+  licores: `<path d="M8 6h8l-1 12a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1z"/><path d="M8.6 11h6.8"/>`,
+  blancos: WINE, rosados: WINE, tintos: WINE,
+  cavas: `<path d="M9.5 3h5l-.6 8a2.4 2.4 0 0 1-3.8 0z"/><path d="M12 13.5V20M9 20h6"/>`
+};
+// Un icono por alérgeno, en el mismo orden que ALLERGENS (clave = número de alérgeno).
+const AL_ICON = {
+  1: `<path d="M12 21V9"/><path d="M12 9c-2.5 0-3.5-2-3.5-4 2.5 0 3.5 2 3.5 4z"/><path d="M12 9c2.5 0 3.5-2 3.5-4-2.5 0-3.5 2-3.5 4z"/><path d="M12 15c-2.5 0-3.5-2-3.5-4 2.5 0 3.5 2 3.5 4z"/><path d="M12 15c2.5 0 3.5-2 3.5-4-2.5 0-3.5 2-3.5 4z"/>`,
+  2: `<path d="M5 15c0-5 3-9 8-9 3 0 5 2 5 4s-2 3-3 3c-2 0-2-2-4-2s-3 2-3 5"/><path d="M9 18l-3 2"/><circle cx="16" cy="9" r=".7" fill="currentColor" stroke="none"/>`,
+  3: `<path d="M12 3c-3.5 0-6 6-6 10a6 6 0 0 0 12 0c0-4-2.5-10-6-10z"/>`,
+  4: CAT_ICON.pescados,
+  5: `<circle cx="12" cy="8" r="3.5"/><circle cx="12" cy="16" r="3.5"/>`,
+  6: `<path d="M5 17c0-8 6-12 14-12 0 8-5 14-14 12z"/><circle cx="10" cy="12" r=".9"/><circle cx="13" cy="9.5" r=".9"/>`,
+  7: `<path d="M10 3h4M10.5 3v4L8 10v9a1.5 1.5 0 0 0 1.5 1.5h5A1.5 1.5 0 0 0 16 19v-9l-2.5-3V3"/><path d="M8 13h8"/>`,
+  8: `<path d="M12 4c4 0 7 3 7 7 0 5-3.5 9-7 9s-7-4-7-9c0-4 3-7 7-7z"/><path d="M12 4v16"/>`,
+  9: `<path d="M12 21V9M9 21l-2-9M15 21l2-9"/><path d="M12 9c-2-1-3-3-3-5 2 0 3 2 3 5zM12 9c2-1 3-3 3-5-2 0-3 2-3 5z"/>`,
+  10: `<path d="M9 3.5h6V7H9z"/><path d="M8 7h8v12a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 8 19z"/><path d="M8 12h8"/>`,
+  11: `<ellipse cx="8" cy="8" rx="2" ry="3" transform="rotate(-30 8 8)"/><ellipse cx="16" cy="9" rx="2" ry="3" transform="rotate(30 16 9)"/><ellipse cx="12" cy="16" rx="2" ry="3"/>`,
+  12: `<circle cx="12" cy="12" r="9"/><text x="12" y="15.2" text-anchor="middle" font-size="8.5" font-weight="700" font-family="sans-serif" fill="currentColor" stroke="none">SO₂</text>`,
+  13: `<path d="M12 21V8"/><circle cx="12" cy="5" r="1.6"/><circle cx="9.5" cy="9" r="1.6"/><circle cx="14.5" cy="9" r="1.6"/><circle cx="9" cy="13" r="1.6"/><circle cx="15" cy="13" r="1.6"/>`,
+  14: `<path d="M3 17a9 9 0 0 1 18 0z"/><path d="M12 8v9M7.5 10l2 7M16.5 10l-2 7"/>`
+};
+const DIET_ICON = {
+  v: `<path d="M5 19c0-8 5-14 15-14 0 10-6 15-14 15"/><path d="M5 19c3-5 6-8 10-10"/>`,
+  vg: `<path d="M12 21v-9"/><path d="M12 12c0-4-3-6-7-6 0 4 3 6 7 6z"/><path d="M12 14c0-3 2.5-5 6-5 0 3-2.5 5-6 5z"/>`
+};
+const alPill = (k, hit) => '<span class="al-pill' + (hit ? " hit" : "") + '">' + ico(AL_ICON[k] || "") + alName(k) + "</span>";
+const dietTag = (it, t) => it[7] && it[7].length ? '<span class="tag diet">' + ico(it[7].includes("vg") ? DIET_ICON.vg : DIET_ICON.v) + (it[7].includes("vg") ? t.diets.vg : t.diets.v) + "</span>" : "";
+
 const key = (ci, ii) => ci + ":" + ii;
 const byKey = (k) => { const [ci, ii] = k.split(":").map(Number); return MENU[ci].items[ii]; };
 const ai = () => (lang === "es" ? [0, 1] : [2, 3]);
@@ -130,10 +180,10 @@ function renderMenu() {
       const price = money(it[4]) + (it[5] ? "<small>" + t.pp + "</small>" : "");
       const det = it[d] ? "<p>" + detail(it[d], t) + "</p>" : "";
       const fd = FICHAS_ON && DETAIL[it[0]];
-      const tags = it[7] && it[7].length ? '<div class="tags"><span class="tag">' + (it[7].includes("vg") ? t.diets.vg : t.diets.v) + "</span></div>" : "";
+      const tags = it[7] && it[7].length ? '<div class="tags">' + dietTag(it, t) + "</div>" : "";
       const cam = fd ? '<button type="button" class="cam" aria-label="' + t.viewCard + ": " + it[n] + '">' + CAM + "</button>" : "";
       const al = showAl && it[6].length
-        ? '<p class="al-text">' + t.contains + ": " + it[6].map((k) => avoid.has(k) ? '<b class="hit">' + alName(k) + "</b>" : alName(k)).join(", ") + "</p>" : "";
+        ? '<div class="al-row"><span class="al-label">' + t.contains + "</span>" + it[6].map((k) => alPill(k, avoid.has(k))).join("") + "</div>" : "";
       return '<li class="dish' + (dishFits(it) ? "" : " nofit") + (fd ? " has-ficha" : "") + '"' + (fd ? ' data-ficha="' + key(ci, ii) + '"' : "") + ' id="d-' + key(ci, ii).replace(":", "-") + '"><div><h3>' + it[n] + cam + "</h3>" + det + tags + al + '</div><span class="price">' + price +
         '</span><button type="button" class="fav" data-k="' + key(ci, ii) + '" aria-pressed="' + on + '" aria-label="' + (on ? t.rmFav : t.addFav) + ": " + it[n] + '">' + heart + "</button></li>";
     }).join("");
@@ -150,11 +200,23 @@ function renderMenu() {
     const first = MENU.find((c) => visible.has(c.id));
     if (first) { curSec = first.id; curGroup = first.group; }
   }
+  renderIndex();
   renderStars();
   renderBar();
   observe();
   renderTray();
 }
+
+// Índice de categorías (cuadrícula de iconos) del grupo activo. Se oculta al buscar.
+function renderIndex() {
+  const host = $("catIndex");
+  host.hidden = !!query;
+  host.innerHTML = query ? "" : MENU.filter((c) => c.group === gridGroup && visible.has(c.id)).map((c) =>
+    '<button type="button" class="cat-tile" data-c="' + c.id + '"><span class="ct-ico">' + ico(CAT_ICON[c.id] || CAT_ICON.tapas) + '</span><span class="ct-name">' + c[lang] + "</span></button>").join("");
+  syncChipsBar();
+}
+// La barra de categorías con iconos aparece cuando el índice sale de la pantalla (o al buscar).
+function syncChipsBar() { document.body.classList.toggle("chips-on", pastGrid || !!query); }
 
 function renderBar() {
   const hasGroup = (g) => MENU.some((c) => c.group === g && visible.has(c.id));
@@ -174,7 +236,7 @@ function renderBar() {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const rebuilt = chips.dataset.sig !== sig;
   if (rebuilt) {
-    chips.innerHTML = list.map((c) => '<button type="button" class="chip" data-c="' + c.id + '" aria-current="' + (c.id === curSec) + '">' + c[lang] + "</button>").join("") + '<span class="chips-end" aria-hidden="true"></span>';
+    chips.innerHTML = list.map((c) => '<button type="button" class="chip" data-c="' + c.id + '" aria-current="' + (c.id === curSec) + '">' + ico(CAT_ICON[c.id] || CAT_ICON.tapas) + "<span>" + c[lang] + "</span></button>").join("") + '<span class="chips-end" aria-hidden="true"></span>';
     fitChipsEnd();
     chips.dataset.sig = sig;
     chips.classList.remove("swap"); void chips.offsetWidth; if (!reduce) chips.classList.add("swap");
@@ -184,7 +246,8 @@ function renderBar() {
   const active = chips.querySelector('.chip[aria-current="true"]');
   if (active) {
     // La categoría activa queda siempre pegada al borde izquierdo (salvo al final de la lista).
-    const left = Math.max(0, chips.scrollLeft + active.getBoundingClientRect().left - chips.getBoundingClientRect().left);
+    const pad = parseFloat(getComputedStyle(chips).paddingLeft) || 0;
+    const left = Math.max(0, chips.scrollLeft + active.getBoundingClientRect().left - chips.getBoundingClientRect().left - pad);
     if (rebuilt || reduce) { cancelAnimationFrame(chipsAnim); chips.scrollLeft = left; } else glideChips(chips, left);
   }
 }
@@ -192,7 +255,8 @@ function renderBar() {
 // Espacio en blanco al final de la barra: así hasta la última categoría puede quedar pegada a la izquierda.
 function fitChipsEnd() {
   const chips = $("chips"), last = chips.querySelector(".chip:last-of-type"), end = chips.querySelector(".chips-end");
-  if (last && end) end.style.flexBasis = Math.max(0, chips.clientWidth - last.offsetWidth) + "px";
+  const pad = parseFloat(getComputedStyle(chips).paddingLeft) || 0;
+  if (last && end) end.style.flexBasis = Math.max(0, chips.clientWidth - pad - last.offsetWidth) + "px";
 }
 window.addEventListener("resize", fitChipsEnd);
 
@@ -265,9 +329,9 @@ function renderFicha() {
   const k = fichaKey, it = byKey(k), fd = DETAIL[it[0]], t = UI[lang], li = lang === "es" ? 0 : 1, [n] = ai();
   const on = picked.has(k);
   const al = it[6].length
-    ? it[6].map((a) => '<span class="tag' + (showAl && avoid.has(a) ? " hit" : "") + '">' + alName(a) + "</span>").join("")
+    ? it[6].map((a) => alPill(a, showAl && avoid.has(a))).join("")
     : '<span class="muted">' + t.noAllergens + "</span>";
-  const dietTags = it[7] && it[7].length ? '<span class="tag">' + (it[7].includes("vg") ? t.diets.vg : t.diets.v) + "</span>" : "";
+  const dietTags = dietTag(it, t);
   $("fichaWrap").innerHTML = '<div class="sheet-back" id="fichaBack"></div><div class="sheet ficha" role="dialog" aria-modal="true" aria-labelledby="fichaTitle">' +
     '<div class="ficha-photo" id="fichaPhoto"><img draggable="false" src="' + fd.photo + '" alt="' + fd.alt[li] + '"><span class="ph-fallback">' + t.photoSoon + '</span>' +
     '<span class="grab" aria-hidden="true"></span><button type="button" class="icon-btn ficha-close" id="fichaClose" aria-label="' + t.closeCard + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
@@ -350,7 +414,7 @@ function observe() {
       curGroup = c.group;
       renderBar();
     });
-  }, { rootMargin: "-130px 0px -70% 0px" });
+  }, { rootMargin: "-140px 0px -70% 0px" });
   document.querySelectorAll("[data-sec]").forEach((s) => io.observe(s));
 }
 
@@ -395,10 +459,20 @@ document.addEventListener("click", (ev) => {
     }
     return;
   }
-  const chip = ev.target.closest(".chip");
+  const chip = ev.target.closest(".chip, .cat-tile");
   if (chip) { document.getElementById(chip.dataset.c)?.scrollIntoView(); return; }
   const seg = ev.target.closest("[data-g]");
-  if (seg && !seg.disabled) { document.getElementById(seg.dataset.g)?.scrollIntoView(); return; }
+  if (seg && !seg.disabled) {
+    const g = seg.dataset.g;
+    if (!pastGrid && !query) {
+      // Arriba del todo, Comida/Bebidas cambia el índice de categorías en el sitio, sin saltar.
+      const first = MENU.find((c) => c.group === g && visible.has(c.id));
+      gridGroup = curGroup = g;
+      if (first) curSec = first.id;
+      renderIndex(); renderBar();
+    } else document.getElementById(g)?.scrollIntoView();
+    return;
+  }
   const l = ev.target.closest("[data-l]");
   if (l && !l.disabled) { lang = l.dataset.l; saveLang(lang); $("langMenu").open = false; renderStatic(); return; }
   const step = ev.target.closest("[data-step]");
@@ -427,6 +501,8 @@ document.addEventListener("click", (ev) => {
   if (ev.target.closest("#trayClear")) { picked.clear(); setTray("closed"); closeWaiter(); renderMenu(); }
 });
 
+// El índice "ha pasado" cuando queda por encima de la pantalla (bajo la barra fija): entonces aparece la barra de iconos.
+new IntersectionObserver(([e]) => { pastGrid = !e.isIntersecting && e.boundingClientRect.top < 0; syncChipsBar(); }, { rootMargin: "-70px 0px 0px 0px" }).observe($("catIndex"));
 $("q").addEventListener("input", (ev) => { const was = query; query = ev.target.value.trim(); if (was && !query) curSec = ""; renderMenu(); });
 document.addEventListener("keydown", (ev) => {
   if (ev.key !== "Escape") return;
